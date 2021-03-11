@@ -287,10 +287,6 @@ void update_obstacle(const LBMParams &params,
 
   const int nx = params.nx;
   const int ny = params.ny;
-  const real_t cx = params.cx;
-  const real_t cy = params.cy;
-
-  const real_t r = params.r;
 
   const int nxny = nx * ny;
   const int npop = LBMParams::npop;
@@ -302,7 +298,7 @@ void update_obstacle(const LBMParams &params,
 
       int index = i + nx * j;
 
-      if ((i - cx) * (i - cx) + (j - cy) * (j - cy) < r * r)
+      if (obstacle[index] == 1)
       {
 
         for (int ipop = 0; ipop < npop; ++ipop)

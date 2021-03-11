@@ -5,9 +5,9 @@ target_sources(lbmCore PRIVATE
   LBMSolver.cpp)
 
 # TODO : uncomment the following for OpenACC
-#target_compile_options(lbmCore
-#  PUBLIC
-#  ${MY_OpenACC_CXX_FLAGS})
+target_compile_options(lbmCore
+ PUBLIC
+ ${MY_OpenACC_CXX_FLAGS})
 
 target_include_directories(lbmCore
   PUBLIC
