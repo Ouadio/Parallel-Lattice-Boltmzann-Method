@@ -138,10 +138,9 @@ void LBMSolver::run()
                   rho,
                   ux,
                   uy);
-
+#pragma acc wait(1)
     if (!(iTime % outStep))
     {
-#pragma acc wait(1)
       if (outImage)
       {
         prepare_png_gpu(params,
@@ -154,9 +153,7 @@ void LBMSolver::run()
       } // Image output case
       else
       {
-#pragma acc update self(ux[:nx * ny]) async(2)
-#pragma acc update self(uy[:nx * ny]) async(2)
-#pragma acc update self(rho[:nx * ny]) async(2)
+#pragma acc update self(ux[:nx * ny],uy[:nx * ny],rho[:nx * ny]) async(2)
       } // VTK output case
     }
 
@@ -191,6 +188,7 @@ void LBMSolver::run()
               v,
               fout,
               fin);
+#pragma acc wait(3)
 
     if (!(iTime % outStep))
     {
@@ -205,7 +203,6 @@ void LBMSolver::run()
       } // VTK output case
     }
 
-#pragma acc wait(3)
 
   } // end for iTime
 

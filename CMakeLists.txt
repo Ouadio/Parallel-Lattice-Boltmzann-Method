@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(LBMcpp LANGUAGES CXX C)
+project(LBMcpp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -36,7 +36,7 @@ endif(USE_DOUBLE)
 set(OpenACC_CXX_LINK ${OpenACC_CXX_FLAGS})
 
 # build OpenACC compile flags
-set(MY_OpenACC_CXX_FLAGS "-fast;-ta=tesla:pinned;-Minfo=accel;-Mprof=ccf")
+set(MY_OpenACC_CXX_FLAGS "")
 set( value_list ${OpenACC_TARGET_FLAGS} )
 separate_arguments(value_list)
 foreach (item ${value_list})

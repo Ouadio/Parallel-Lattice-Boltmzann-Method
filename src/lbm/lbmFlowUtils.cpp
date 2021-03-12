@@ -257,7 +257,7 @@ void equilibrium(const LBMParams &params,
   const int ny = params.ny;
   const int npop = LBMParams::npop;
 
-#pragma acc parallel loop independent gang vector vector_length(32) num_gangs(2048) num_workers(16) present(ux, uy, feq, rho, t, v) wait(1) async(3)
+#pragma acc parallel loop independent gang vector vector_length(32) num_gangs(500) num_workers(16) present(ux, uy, feq, rho, t, v) async(3)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop worker vector cache(v [0:(2 * npop)], t [0:npop])
@@ -438,16 +438,16 @@ void prepare_png_gpu(const LBMParams &params,
                      unsigned char *img)
 {
 
+#pragma acc update self(ux[0:1], uy[0:1]) async(2)
   const int nx = params.nx;
   const int ny = params.ny;
-
+#pragma acc wait(2)
   // compute velocity norm, as well as min and max values
   real_t min_value = sqrt(ux[0] * ux[0] + uy[0] * uy[0]);
   real_t max_value = min_value;
-
-#pragma acc parallel num_gangs(50) present(u2, ux, uy) copy(min_value, max_value) async(2)
+#pragma acc parallel num_gangs(100) vector_length(32) num_workers(4) present(u2, ux, uy) copy(min_value, max_value) async(2)
   {
-#pragma acc loop gang worker collapse(2) reduction(max \
+#pragma acc loop gang worker vector collapse(2) reduction(max \
                                                    : max_value)
     for (int j = 0; j < ny; ++j)
     {
@@ -468,7 +468,7 @@ void prepare_png_gpu(const LBMParams &params,
 
     } // end for j
 
-#pragma acc loop gang worker collapse(2) reduction(min \
+#pragma acc loop gang vector collapse(2) reduction(min \
                                                    : min_value)
     for (int j = 0; j < ny; ++j)
     {
@@ -483,7 +483,7 @@ void prepare_png_gpu(const LBMParams &params,
     } // end for j
   }
 
-#pragma acc parallel loop gang worker vector num_workers(8) vector_length(32) num_gangs(50) present(u2, img) copyin(min_value, max_value) async(2)
+#pragma acc parallel loop gang worker vector num_workers(4) vector_length(128) num_gangs(100) present(u2, img) copyin(min_value, max_value) async(2)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector
