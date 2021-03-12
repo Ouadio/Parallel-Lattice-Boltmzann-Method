@@ -27,38 +27,42 @@ class LBMSolver
 {
 
 public:
-  LBMSolver(const LBMParams& params);
+  // distribution functions
+  real_t *fin{nullptr};
+  real_t *fout{nullptr};
+  real_t *feq{nullptr};
+
+  // macroscopic variables
+  real_t *rho{nullptr};
+  real_t *ux{nullptr};
+  real_t *uy{nullptr};
+
+  real_t *u2{nullptr};
+
+  unsigned char *img{nullptr};
+
+  // obstacle
+  uint8_t *obstacle{nullptr};
+
+  LBMSolver(const LBMParams &params);
   ~LBMSolver();
 
   //! LBM weight for D2Q9
-  const weights_t t{1.0/36, 1.0/9, 1.0/36, 1.0/9, 4.0/9, 1.0/9, 1.0/36, 1.0/9, 1.0/36};
+  const real_t t[9] = {1.0 / 36, 1.0 / 9, 1.0 / 36, 1.0 / 9, 4.0 / 9, 1.0 / 9, 1.0 / 36, 1.0 / 9, 1.0 / 36};
 
   // LBM lattive velocity (X and Y components) for D2Q9
-  const velocity_array_t v{
-    1,  1, 
-    1,  0,
-    1, -1, 
-    0,  1,
-    0,  0, 
-    0, -1, 
-    -1,  1,
-    -1,  0, 
-    -1, -1};
+  const real_t v[9 * 2]{
+      1, 1,
+      1, 0,
+      1, -1,
+      0, 1,
+      0, 0,
+      0, -1,
+      -1, 1,
+      -1, 0,
+      -1, -1};
 
-  // distribution functions
-  real_t* fin;
-  real_t* fout;
-  real_t* feq;
-
-  // macroscopic variables
-  real_t* rho;
-  real_t* ux;
-  real_t* uy;
-
-  // obstacle
-  int* obstacle;
-
-  const LBMParams& params;
+  const LBMParams &params;
 
   void initialize();
   void run();

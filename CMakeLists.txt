@@ -21,7 +21,6 @@ include(print_target_properties)
 #include(build_macro)
 
 # always export compile commands database
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  
 
 # other third party libraries
 find_package(OpenMP)
@@ -37,7 +36,7 @@ endif(USE_DOUBLE)
 set(OpenACC_CXX_LINK ${OpenACC_CXX_FLAGS})
 
 # build OpenACC compile flags
-set(MY_OpenACC_CXX_FLAGS "")
+set(MY_OpenACC_CXX_FLAGS "-fast;-ta=tesla:pinned;-Minfo=accel;-Mprof=ccf")
 set( value_list ${OpenACC_TARGET_FLAGS} )
 separate_arguments(value_list)
 foreach (item ${value_list})

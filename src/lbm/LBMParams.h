@@ -7,7 +7,8 @@
 /**
  * LBM Parameters (declaration)
  */
-struct LBMParams {
+struct LBMParams
+{
 
   //! dimension : 2 or 3
   static const int dim = 2;
@@ -17,6 +18,8 @@ struct LBMParams {
 
   //! run parameters
   int maxIter;
+  int outStep;
+  bool outImage;
 
   //! geometry : number of nodes along X axis
   int nx;
@@ -49,15 +52,21 @@ struct LBMParams {
    */
   //! Reynolds number
   double Re;
-  
+
   //! viscosity in lattice units
   double nuLB;
-  
+
   //! relaxation parameter
   double omega;
 
   //! setup / initialization
-  void setup(const ConfigMap& configMap); 
+  void setup(const ConfigMap &configMap);
+  void setup(int maxIter,
+             int outputStep,
+             int nx,
+             int ny,
+             double uLB,
+             double Re);
 
   //! print parameters on screen
   void print();
