@@ -8,11 +8,11 @@ void LBMParams::setup(const ConfigMap &configMap)
   // initialize run parameters
   maxIter = configMap.getInteger("run", "maxIter", 2000);
   outStep = configMap.getInteger("run", "outStep", 500);
-  outImage = configMap.getBool("run", "outImage", false);
+  outImage = configMap.getBool("run", "outImage", true);
 
   // geometry
-  nx = configMap.getInteger("geometry", "nx", 420);
-  ny = configMap.getInteger("geometry", "ny", 180);
+  nx = configMap.getInteger("geometry", "nx", 420*8);
+  ny = configMap.getInteger("geometry", "ny", 180*8);
 
   lx = static_cast<double>(nx) - 1;
   ly = static_cast<double>(ny) - 1;
