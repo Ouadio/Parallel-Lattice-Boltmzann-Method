@@ -6,13 +6,13 @@ void LBMParams::setup(const ConfigMap &configMap)
 {
 
   // initialize run parameters
-  maxIter = configMap.getInteger("run", "maxIter", 1000);
-  outStep = configMap.getInteger("run", "outStep", 500);
+  maxIter = configMap.getInteger("run", "maxIter", 500);
+  outStep = configMap.getInteger("run", "outStep", 100);
   outImage = configMap.getBool("run", "outImage", true);
 
   // geometry
-  nx = configMap.getInteger("geometry", "nx", 420*4);
-  ny = configMap.getInteger("geometry", "ny", 180*4);
+  nx = configMap.getInteger("geometry", "nx", 420*8);
+  ny = configMap.getInteger("geometry", "ny", 180*8);
 
   lx = static_cast<double>(nx) - 1;
   ly = static_cast<double>(ny) - 1;

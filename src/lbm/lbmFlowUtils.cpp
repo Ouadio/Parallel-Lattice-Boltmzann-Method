@@ -67,7 +67,7 @@ void initialize_macroscopic_variables(const LBMParams &params,
   const double uLB = params.uLB;
   const double ly = params.ly;
 
-#pragma acc parallel loop independent gang vector vector_length(128) num_workers(8) num_gangs(256) present(rho, ux, uy) async(1)
+#pragma acc parallel loop independent gang vector vector_length(64) num_workers(8) num_gangs(256) present(rho, ux, uy) async(1)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector
@@ -78,7 +78,7 @@ void initialize_macroscopic_variables(const LBMParams &params,
     } // end for i
   }   // end for j
 
-#pragma acc parallel loop independent gang worker vector vector_length(64) num_workers(16) num_gangs(128) present(rho, ux, uy) async(1)
+#pragma acc parallel loop independent gang worker vector vector_length(64) num_workers(16) num_gangs(500) present(rho, ux, uy) async(1)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector
@@ -104,7 +104,7 @@ void initialize_equilibrium(const LBMParams &params,
   const int ny = params.ny;
   const int npop = LBMParams::npop;
 
-#pragma acc parallel loop independent gang worker vector num_gangs(256) vector_length(32) num_workers(16) present(ux, uy, fin, rho, t, v) async(1)
+#pragma acc parallel loop independent gang worker vector num_gangs(500) vector_length(32) num_workers(16) present(ux, uy, fin, rho, t, v) async(1)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector cache(v [0:(2 * npop)], t [0:npop])
@@ -118,7 +118,7 @@ void initialize_equilibrium(const LBMParams &params,
 
       double usqr = 3.0 / 2 * (uX * uX + uY * uY);
 #pragma acc loop seq
-      for (int ipop = 0; ipop < npop; ++ipop)
+      for (short ipop = 0; ipop < npop; ++ipop)
       {
         cu = 3 * (v[ipop * 2] * uX +
                   v[ipop * 2 + 1] * uY);
@@ -144,7 +144,7 @@ void border_outflow(const LBMParams &params,
 
   const int i1 = nx - 1;
   const int i2 = nx - 2;
-#pragma acc parallel loop independent present(fin) async(1)
+#pragma acc parallel loop gang vector num_gangs(50) vector_length(64) independent present(fin) async(1)
   for (int j = 0; j < ny; ++j)
   {
 
@@ -172,7 +172,7 @@ void macroscopic(const LBMParams &params,
   const int ny = params.ny;
   const int npop = LBMParams::npop;
 
-#pragma acc parallel loop independent gang worker vector vector_length(128) num_workers(8) present(ux, uy, fin, rho, v) async(1)
+#pragma acc parallel loop independent gang worker vector num_gangs(50) vector_length(64) num_workers(8) present(ux, uy, fin, rho, v) async(1)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector cache(v [0:(2 * npop)])
@@ -186,7 +186,7 @@ void macroscopic(const LBMParams &params,
       double tempFin = 0.0;
 
 #pragma acc loop seq
-      for (int ipop = 0; ipop < npop; ++ipop)
+      for (short ipop = 0; ipop < npop; ++ipop)
       {
 
         // int index = base_index + ipop * nx * ny;
@@ -227,7 +227,7 @@ void border_inflow(const LBMParams &params,
 
   const int i = 0;
   int index = 0;
-#pragma acc parallel loop independent gang worker vector num_gangs(5) vector_length(128) num_workers(4) present(ux, uy, rho, fin) async(1)
+#pragma acc parallel loop independent gang worker vector num_gangs(50) vector_length(128) num_workers(4) present(ux, uy, rho, fin) async(1)
   for (int j = 0; j < ny; ++j)
   {
 
@@ -257,7 +257,7 @@ void equilibrium(const LBMParams &params,
   const int ny = params.ny;
   const int npop = LBMParams::npop;
 
-#pragma acc parallel loop independent gang vector vector_length(32) num_gangs(500) num_workers(16) present(ux, uy, feq, rho, t, v) async(3)
+#pragma acc parallel loop independent gang vector vector_length(32) num_gangs(500) num_workers(8) present(ux, uy, feq, rho, t, v) async(3)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop worker vector cache(v [0:(2 * npop)], t [0:npop])
@@ -266,11 +266,16 @@ void equilibrium(const LBMParams &params,
 
       int index = i + nx * j;
 
-      double usqr = 3.0 / 2 * (ux[index] * ux[index] + uy[index] * uy[index]);
+      real_t uX = ux[index];
+      real_t uY = uy[index];
+
+      real_t usqr = 3.0 / 2 * (uX * uX + uY * uY);
+      real_t cu = 0.0;
+
 #pragma acc loop seq
-      for (int ipop = 0; ipop < npop; ++ipop)
+      for (short ipop = 0; ipop < npop; ++ipop)
       {
-        double cu = 3 * (v[ipop * 2] * ux[index] +
+        cu = 3 * (v[ipop * 2] * ux[index] +
                          v[ipop * 2 + 1] * uy[index]);
 
         feq[index + ipop * nx * ny] = rho[index] * t[ipop] * (1 + cu + 0.5 * cu * cu - usqr);
@@ -329,11 +334,12 @@ void compute_collision(const LBMParams &params,
     {
       int index = i + nx * j;
 #pragma acc loop seq
-      for (int ipop = 0; ipop < npop; ++ipop)
+      for (short ipop = 0; ipop < npop; ++ipop)
       {
         int index_f = index + ipop * nxny;
+        real_t finIDX = fin[index_f];
 
-        fout[index_f] = fin[index_f] - omega * (fin[index_f] - feq[index_f]);
+        fout[index_f] = finIDX - omega * (finIDX - feq[index_f]);
       } // end for ipop
 
     } // end for i
@@ -352,7 +358,8 @@ void update_obstacle(const LBMParams &params,
   const int ny = params.ny;
   const int nxny = nx * ny;
   const int npop = LBMParams::npop;
-#pragma acc parallel loop independent gang worker vector num_workers(16) vector_length(64) num_gangs(80) present(fin, fout, obstacle) async(3)
+
+#pragma acc parallel loop independent gang worker vector num_workers(8) vector_length(32) num_gangs(80) present(fin, fout, obstacle) async(3)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector
@@ -364,7 +371,7 @@ void update_obstacle(const LBMParams &params,
       if (obstacle[index] == 1)
       {
 #pragma acc loop seq
-        for (int ipop = 0; ipop < npop; ++ipop)
+        for (short ipop = 0; ipop < npop; ++ipop)
         {
 
           int index_out = index + ipop * nxny;
@@ -393,7 +400,7 @@ void streaming(const LBMParams &params,
   const int nxny = nx * ny;
   const int npop = LBMParams::npop;
 
-#pragma acc parallel loop independent gang worker vector num_workers(4) vector_length(128) num_gangs(500) present(fin, fout, v) async(3)
+#pragma acc parallel loop independent gang worker vector num_workers(8) vector_length(128) num_gangs(100) present(fin, fout, v) async(3)
   for (int j = 0; j < ny; ++j)
   {
 #pragma acc loop vector cache(v [0:(2 * npop)])
@@ -401,7 +408,7 @@ void streaming(const LBMParams &params,
     {
       int index = i + nx * j;
 #pragma acc loop seq
-      for (int ipop = 0; ipop < npop; ++ipop)
+      for (short ipop = 0; ipop < npop; ++ipop)
       {
         int index_in = index + ipop * nxny;
         int i_out = i - v[2 * ipop];
