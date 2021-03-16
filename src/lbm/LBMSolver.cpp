@@ -100,7 +100,7 @@ void LBMSolver::initialize()
                          uy,
                          fin);
 #pragma acc wait(1)
-#pragma acc wait
+  // #pragma acc wait
 } // LBMSolver::initialize
 
 // ======================================================
@@ -153,7 +153,7 @@ void LBMSolver::run()
       } // Image output case
       else
       {
-#pragma acc update self(ux[:nx * ny],uy[:nx * ny],rho[:nx * ny]) async(2)
+#pragma acc update self(ux[:nx * ny], uy[:nx * ny], rho[:nx * ny]) async(2)
       } // VTK output case
     }
 
@@ -202,7 +202,6 @@ void LBMSolver::run()
         output_vtk(iTime);
       } // VTK output case
     }
-
 
   } // end for iTime
 
